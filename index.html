@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI-Powered Quiz Generator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f6fc;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #0056b3;
+    }
+    label, p {
+      font-size: 16px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .question {
+      margin: 20px 0;
+    }
+    .options input {
+      margin-right: 8px;
+    }
+    .correct {
+      color: green;
+      font-weight: bold;
+    }
+    .incorrect {
+      color: red;
+      font-weight: bold;
+    }
+    .score {
+      font-size: 18px;
+      margin-top: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI-Powered Quiz Generator</h1>
+    <label for="topic">Enter a topic and let our AI generate a unique quiz for you!</label>
+    <input type="text" id="topic" placeholder="e.g. India, Space, Python"/>
+    <button onclick="generateQuiz()">Generate Quiz</button>
+    <div id="quiz"></div>
+    <div class="score" id="scoreDisplay"></div>
+  </div>
+
+  <script>
+    let currentQuiz = null;
+
+    async function generateQuiz() {
+      const topic = document.getElementById("topic").value.trim();
+      const quizDiv = document.getElementById("quiz");
+      const scoreDisplay = document.getElementById("scoreDisplay");
+      quizDiv.innerHTML = "";
+      scoreDisplay.innerHTML = "";
+
+      if (!topic) {
+        alert("Please enter a topic.");
+        return;
+      }
+
+      quizDiv.innerHTML = "<p>Generating quiz, please wait...</p>";
+
+      try {
+        const response = await fetch("http://127.0.0.1:5000/generate-quiz", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topic })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          quizDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+          return;
+        }
+
+        currentQuiz = data;
+        showQuiz(data);
+      } catch (err) {
+        quizDiv.innerHTML = "<p style='color:red;'>Failed to connect to backend.</p>";
+        console.error(err);
+      }
+    }
+
+    function showQuiz(data) {
+      const quizDiv = document.getElementById("quiz");
+      quizDiv.innerHTML = `<h2>Topic: ${data.topic}</h2>`;
+      data.questions.forEach((q, index) => {
+        const qDiv = document.createElement("div");
+        qDiv.classList.add("question");
+        qDiv.innerHTML = `
+          <p><strong>Q${index + 1}:</strong> ${q.question}</p>
+          <div class="options">
+            ${q.options.map((opt, i) => `
+              <label>
+                <input type="radio" name="q${index}" value="${opt}"> ${opt}
+              </label><br>
+            `).join("")}
+          </div>
+        `;
+        quizDiv.appendChild(qDiv);
+      });
+
+      const submitBtn = document.createElement("button");
+      submitBtn.innerText = "Submit Quiz";
+      submitBtn.onclick = evaluateQuiz;
+      quizDiv.appendChild(submitBtn);
+    }
+
+    function evaluateQuiz() {
+      let score = 0;
+      currentQuiz.questions.forEach((q, index) => {
+        const selected = document.querySelector(`input[name="q${index}"]:checked`);
+        const qDiv = document.querySelectorAll(".question")[index];
+        const result = document.createElement("p");
+
+        if (selected) {
+          if (selected.value === q.correct_answer) {
+            result.innerText = "Correct!";
+            result.classList.add("correct");
+            score++;
+          } else {
+            result.innerText = `Incorrect! Correct answer: ${q.correct_answer}`;
+            result.classList.add("incorrect");
+          }
+        } else {
+          result.innerText = `No answer selected. Correct answer: ${q.correct_answer}`;
+          result.classList.add("incorrect");
+        }
+
+        qDiv.appendChild(result);
+      });
+
+      const scoreDisplay = document.getElementById("scoreDisplay");
+      scoreDisplay.innerHTML = `You scored ${score} out of ${currentQuiz.questions.length}`;
+    }
+  </script>
+</body>
+</html>
