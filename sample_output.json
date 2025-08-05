@@ -1,0 +1,32 @@
+[
+    {
+        "question": "What is the capital of France?",
+        "options": [
+            "London",
+            "Berlin",
+            "Paris",
+            "Madrid"
+        ],
+        "answer": "Paris"
+    },
+    {
+        "question": "At what temperature does water boil?",
+        "options": [
+            "90\u00b0C",
+            "100\u00b0C",
+            "110\u00b0C",
+            "80\u00b0C"
+        ],
+        "answer": "100\u00b0C"
+    },
+    {
+        "question": "Who developed the theory of relativity?",
+        "options": [
+            "Isaac Newton",
+            "Nikola Tesla",
+            "Albert Einstein",
+            "Galileo Galilei"
+        ],
+        "answer": "Albert Einstein"
+    }
+]
